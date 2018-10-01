@@ -27,7 +27,7 @@ public class CalendarCoverter {
             case 07:
                 return "Sunday";
              default:
-                 return "Does your week has more than 7 days?";
+                 return "Does your week have more than 7 days?";
         }
     }
 }

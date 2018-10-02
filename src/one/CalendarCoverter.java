@@ -1,30 +1,30 @@
 package one;
 
 public class CalendarCoverter {
-    final static int Monday = 1;
-    final static int Tuesday = 2;
-    final static int Wednesday = 3;
-    final static int Thursday = 4;
-    final static int Friday = 5;
-    final static int Saturday = 6;
-    final static int Sunday = 7;
+    final static int MONDAY = 1;
+    final static int TUESDAY = 2;
+    final static int WEDNESDAY = 3;
+    final static int THURSDAY = 4;
+    final static int FRIDAY = 5;
+    final static int SATURDAY = 6;
+    final static int SUNDAY = 7;
 
     static String convertDayToString(int dayNumber) {
 
         switch (dayNumber) {
-            case 01:
+            case MONDAY:
                 return "Monday";
-            case 02:
+            case TUESDAY:
                 return "Tuesday";
-            case 03:
+            case WEDNESDAY:
                 return "Wednesday";
-            case 04:
+            case THURSDAY:
                 return "Thursday";
-            case 05:
+            case FRIDAY:
                 return "Friday";
-            case 06:
+            case SATURDAY:
                 return "Saturday";
-            case 07:
+            case SUNDAY:
                 return "Sunday";
              default:
                  return "Does your week have more than 7 days?";

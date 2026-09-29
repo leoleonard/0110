@@ -201,6 +201,32 @@
 
 ---
 
+### Q17. How do you keep cross-team dependencies from blocking a sprint (e.g. teams waiting on the component library)?
+
+**Answer:**
+- **Make dependencies visible early**: in refinement, tag stories that need a new library component or API change; run a lightweight cross-team sync (or a PI-planning board in SAFe) listing who needs what by when.
+- **Publish a library roadmap** and a request intake (issue template: use case, designs, deadline, which products). Triage it weekly with design.
+- **Decouple delivery**: the product team can build a local component that follows the tokens and API conventions, then it's promoted into the library ("inner-source" contribution with library-team review) — nobody waits for us.
+- **Release small and often**: prereleases (`next` tag) so teams can adopt early; SemVer so they can upgrade without fear.
+- Track lead time of library requests as a health metric; if it grows, the library team is a bottleneck and needs more contributors or a clearer contribution model.
+
+---
+
+### Q18. "Tell me about a time a sprint went badly." How do you structure behavioural answers?
+
+**Answer:**
+- Use **STAR** (Situation, Task, Action, Result) and add **Learning** — keep it to ~2 minutes, spend most time on *your* actions, and quantify the result.
+- Pick stories that show senior behaviours: influencing without authority, making trade-offs visible, protecting quality under pressure, improving the system rather than blaming people.
+- Example skeleton:
+  - *Situation*: a third-party pricing API slipped two weeks, threatening the sprint goal for a release.
+  - *Task*: as frontend lead, keep the release date without shipping something broken.
+  - *Action*: agreed a frozen contract with the vendor, built against MSW mocks, proposed to the PO a thinner slice (cached prices, no live quotes) behind a feature flag, escalated the vendor delay with impact data.
+  - *Result*: released on time with the reduced scope; live quotes enabled by flag two weeks later with zero incidents.
+  - *Learning*: we added "third-party contract agreed + mock available" to our Definition of Ready.
+- Prepare 4–5 stories that can be adapted: conflict with a stakeholder, a production incident, mentoring, a decision you'd change in hindsight, a measurable improvement you drove (performance, a11y, cycle time).
+
+---
+
 ## B. Tricky / trap questions
 
 ### T1. "Team A has velocity 60, team B has 30. Team A is twice as productive, right?"
@@ -369,3 +395,7 @@ Monte Carlo (40 items remaining, last 10 weeks' throughput = [4,6,5,3,7,5,6,4,5,
 - "Designers give us the designs and we implement them." → "We collaborate early, share tokens and components, and do design QA together."
 - "The third party is late, so we're blocked." → "We agreed the contract early and built against mocks; I escalated with data."
 - "I follow the Scrum Guide to the letter." → "I use the framework to get fast feedback and outcomes, and adapt it to context."
+- "The daily is where everyone reports what they did yesterday." → "The daily is the Developers re-planning towards the Sprint Goal; blockers get solved after it."
+- "Other teams have to wait for the library team." → "We have a contribution model, prereleases and a roadmap so nobody is blocked on us."
+- "We hit 100% of our committed points every sprint." → "Consistently hitting 100% usually means padding; I care about the Sprint Goal and outcomes."
+- "QA tests it at the end of the sprint." → "QA is involved from refinement; testing happens continuously inside the sprint."

@@ -820,7 +820,7 @@ export class RatingComponent implements ControlValueAccessor {
 With Signal Forms, a custom control needs no CVA plumbing. It exposes a `value` **model** (or a `checked` model via `FormCheckboxControl`). `[formField]` binds to it, and it can also bind optional state properties such as disabled or touched if the control declares them.
 
 ```typescript
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, output } from '@angular/core';
 import { FormValueControl } from '@angular/forms/signals';
 
 @Component({
@@ -828,7 +828,7 @@ import { FormValueControl } from '@angular/forms/signals';
   template: `
     @for (star of stars; track star) {
       <button type="button" [disabled]="disabled()" [class.filled]="star <= value()"
-              (click)="value.set(star)" (blur)="touched.set(true)">★</button>
+              (click)="value.set(star)" (blur)="touch.emit()">★</button>
     }
   `,
 })
@@ -836,7 +836,8 @@ export class RatingComponent implements FormValueControl<number> {
   protected readonly stars = [1, 2, 3, 4, 5];
   readonly value = model(0);               // the only required member
   readonly disabled = input(false);        // optional: bound from field state
-  readonly touched = model(false);         // optional: reports touch back
+  readonly touched = input(false);        // optional: touched state from the field
+  readonly touch = output<void>();        // optional: reports touch back (v22 FormUiControl)
 }
 
 // Usage: <lib-rating [formField]="f.score" />

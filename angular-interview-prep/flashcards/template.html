@@ -1,0 +1,330 @@
+<title>Angular Prep Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centred column; mode switch and topic filter on top, one large card in the middle, controls as big thumb-sized buttons below. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --fg: #17202b;
+  --muted: #5b6676;
+  --line: #d6dce4;
+  --accent: #0e6e6e;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefee;
+  --weak: #b4471f;
+  --weak-soft: #fbe6dd;
+  --good: #2f7a3b;
+  --good-soft: #e1f2e3;
+  --again: #a5641a;
+  --again-soft: #fbeedb;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1418; --surface: #182027; --fg: #e8edf2; --muted: #9aa6b4; --line: #2a3540;
+  --accent: #4fc2bf; --accent-ink: #0b1a1a; --accent-soft: #173a3a;
+  --weak: #f0875f; --weak-soft: #3d2219; --good: #79cf86; --good-soft: #1c3321;
+  --again: #e8a95a; --again-soft: #3a2b16; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1418; --surface: #182027; --fg: #e8edf2; --muted: #9aa6b4; --line: #2a3540;
+  --accent: #4fc2bf; --accent-ink: #0b1a1a; --accent-soft: #173a3a;
+  --weak: #f0875f; --weak-soft: #3d2219; --good: #79cf86; --good-soft: #1c3321;
+  --again: #e8a95a; --again-soft: #3a2b16; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.5; }
+.app { max-width: 720px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+h1 { font-size: 1.3rem; margin: 0; text-wrap: balance; }
+.stats { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-size: .95rem; font-weight: 700; border: 0; background: transparent; color: var(--fg); padding: 9px 16px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.chips-wrap { overflow-x: auto; margin-inline: -16px; padding-inline: 16px; scrollbar-width: thin; }
+.chips { display: flex; gap: 8px; width: max-content; padding-block: 2px 6px; }
+.chip { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 6px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip.weak { border-color: var(--weak); }
+.chip .n { font-family: var(--f-mono); font-size: .75rem; opacity: .7; margin-left: 4px; }
+
+.opts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .9rem; color: var(--muted); }
+.opts label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.opts select { font: inherit; font-size: .9rem; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; max-width: 100%; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 14px; min-height: 300px; align-content: start; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; }
+.tag { color: var(--accent); }
+.badge { padding: 2px 8px; border-radius: 999px; }
+.badge.weak { background: var(--weak-soft); color: var(--weak); }
+.badge.known { background: var(--good-soft); color: var(--good); }
+.badge.again { background: var(--again-soft); color: var(--again); }
+.q { font-size: 1.35rem; line-height: 1.35; font-weight: 700; margin: 0; text-wrap: pretty; }
+.a { font-size: 1.08rem; margin: 0; border-top: 1px dashed var(--line); padding-top: 14px; max-width: 62ch; }
+.reveal { font: inherit; font-weight: 700; border: 2px dashed var(--line); background: transparent; color: var(--muted); border-radius: 12px; padding: 18px; cursor: pointer; }
+
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.btn { font: inherit; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 12px; padding: 14px 10px; cursor: pointer; min-height: 52px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.good { background: var(--good-soft); color: var(--good); border-color: var(--good); }
+.btn.again { background: var(--again-soft); color: var(--again); border-color: var(--again); }
+.btn:disabled { opacity: .45; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.listen-status { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--accent); min-height: 28px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.on { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.big { font-size: 1.15rem; min-height: 72px; }
+.row.three { grid-template-columns: 1fr 1.4fr 1fr; }
+.note { font-size: .85rem; color: var(--muted); margin: 0; }
+.empty { color: var(--muted); font-style: italic; }
+footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; font-size: .85rem; color: var(--muted); }
+.link { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; }
+@media (prefers-reduced-motion: reduce) { .dot.on { animation: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Angular Prep Flashcards</h1>
+    <div class="seg" role="group" aria-label="Mode">
+      <button id="mCards" aria-pressed="true">Cards</button>
+      <button id="mListen" aria-pressed="false">Listen</button>
+    </div>
+  </header>
+
+  <div class="chips-wrap"><div class="chips" id="chips" role="group" aria-label="Topic"></div></div>
+
+  <div class="opts">
+    <label><input type="checkbox" id="optShuffle"> Shuffle</label>
+    <label><input type="checkbox" id="optHideKnown"> Hide cards I know</label>
+    <span class="stats" id="stats"></span>
+  </div>
+
+  <!-- Cards mode -->
+  <section id="cardsMode" aria-label="Flashcards">
+    <div class="card" id="card"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn again" id="bAgain">Again</button>
+      <button class="btn good" id="bGot">Got it</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="bPrev">◀ Previous</button>
+      <button class="btn" id="bNext">Next ▶</button>
+    </div>
+  </section>
+
+  <!-- Listen mode -->
+  <section id="listenMode" aria-label="Listen mode" hidden>
+    <div class="card" id="lCard"></div>
+    <div class="listen-status" aria-live="polite"><span class="dot" id="lDot"></span><span id="lStatus">Press Play to start.</span></div>
+    <div class="row three" style="margin-top:8px">
+      <button class="btn" id="lPrev">◀ Back</button>
+      <button class="btn primary big" id="lPlay">▶ Play</button>
+      <button class="btn" id="lNext">Skip ▶</button>
+    </div>
+    <div class="opts" style="margin-top:12px">
+      <label>Speed
+        <select id="lRate"><option value="0.85">0.85×</option><option value="1" selected>1×</option><option value="1.15">1.15×</option><option value="1.3">1.3×</option></select>
+      </label>
+      <label>Time to answer
+        <select id="lThink"><option value="3">3 s</option><option value="6" selected>6 s</option><option value="10">10 s</option><option value="15">15 s</option></select>
+      </label>
+      <label>Voice <select id="lVoice"></select></label>
+    </div>
+    <p class="note" style="margin-top:10px">Hands-free: it reads the question, pauses so you can answer out loud, then reads the answer and moves on. Start it before you drive. The screen stays on while it plays if your device allows it.</p>
+    <p class="note" id="lUnsupported" hidden>Spoken audio isn't available in this browser. Try Chrome or Safari, or use Cards mode.</p>
+  </section>
+
+  <footer>
+    <span id="foot"></span>
+    <button class="link" id="bReset">Reset my progress</button>
+  </footer>
+</div>
+
+<script>
+const CARDS = /*__CARDS__*/[];
+const WEAK = /*__WEAK__*/[];
+
+const $ = id => document.getElementById(id);
+const hash = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return 'c' + (h >>> 0).toString(36); };
+CARDS.forEach(c => { c.id = hash(c.q); c.weak = WEAK.includes(c.topic); });
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let progress = store.get('ngcards.progress', {});
+let state = Object.assign({ filter: 'weak', shuffle: false, hideKnown: false, mode: 'cards' }, store.get('ngcards.prefs', {}));
+let deck = [], pos = 0, revealed = false;
+
+const topics = [...new Set(CARDS.map(c => c.topic))];
+
+function buildChips() {
+  const make = (key, label, count, weak) =>
+    `<button class="chip${weak ? ' weak' : ''}" data-f="${key}" aria-pressed="${state.filter === key}">${label}<span class="n">${count}</span></button>`;
+  $('chips').innerHTML =
+    make('weak', 'Weak areas', CARDS.filter(c => c.weak).length, true) +
+    make('all', 'All', CARDS.length) +
+    topics.map(t => make(t, t, CARDS.filter(c => c.topic === t).length, WEAK.includes(t))).join('');
+  $('chips').querySelectorAll('.chip').forEach(b => b.onclick = () => { state.filter = b.dataset.f; savePrefs(); rebuild(); });
+}
+
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function rebuild() {
+  let d = state.filter === 'all' ? CARDS.slice()
+        : state.filter === 'weak' ? CARDS.filter(c => c.weak)
+        : CARDS.filter(c => c.topic === state.filter);
+  if (state.hideKnown) d = d.filter(c => progress[c.id] !== 'known');
+  // cards marked "again" come first
+  d.sort((a, b) => (progress[b.id] === 'again') - (progress[a.id] === 'again'));
+  if (state.shuffle) d = shuffle(d);
+  deck = d; pos = 0; revealed = false;
+  buildChips(); render();
+}
+
+function savePrefs() { store.set('ngcards.prefs', { filter: state.filter, shuffle: state.shuffle, hideKnown: state.hideKnown, mode: state.mode }); }
+
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function cardHtml(c, showAnswer, withReveal) {
+  if (!c) return '<p class="empty">No cards here. Pick another topic, or turn off "Hide cards I know".</p>';
+  const p = progress[c.id];
+  return `<div class="meta"><span class="tag">${esc(c.topic)}</span>${c.weak ? '<span class="badge weak">weak area</span>' : ''}${p === 'known' ? '<span class="badge known">known</span>' : ''}${p === 'again' ? '<span class="badge again">again</span>' : ''}</div>
+    <p class="q">${esc(c.q)}</p>
+    ${showAnswer ? `<p class="a">${esc(c.a)}</p>` : withReveal ? '<button class="reveal" id="bReveal">Show answer (tap or press space)</button>' : ''}`;
+}
+
+function render() {
+  const c = deck[pos];
+  $('card').innerHTML = cardHtml(c, revealed, true);
+  const r = $('bReveal'); if (r) r.onclick = () => { revealed = true; render(); };
+  ['bPrev','bNext','bAgain','bGot'].forEach(id => $(id).disabled = !c);
+  $('bPrev').disabled = !c || pos === 0;
+  $('bNext').disabled = !c || pos >= deck.length - 1;
+  $('stats').textContent = deck.length ? `${pos + 1} / ${deck.length}` : '0 / 0';
+  const known = CARDS.filter(x => progress[x.id] === 'known').length;
+  const again = CARDS.filter(x => progress[x.id] === 'again').length;
+  $('foot').textContent = `${CARDS.length} cards · ${known} known · ${again} to repeat`;
+  if (state.mode === 'listen') $('lCard').innerHTML = cardHtml(c, listenShowAnswer, false);
+}
+
+function go(n) { if (!deck.length) return; pos = Math.max(0, Math.min(deck.length - 1, n)); revealed = false; render(); }
+function mark(v) { const c = deck[pos]; if (!c) return; progress[c.id] = v; store.set('ngcards.progress', progress); if (pos < deck.length - 1) go(pos + 1); else render(); }
+
+$('bPrev').onclick = () => go(pos - 1);
+$('bNext').onclick = () => go(pos + 1);
+$('bAgain').onclick = () => mark('again');
+$('bGot').onclick = () => mark('known');
+$('bReset').onclick = () => {
+  const b = $('bReset');
+  if (b.dataset.confirm) { progress = {}; store.set('ngcards.progress', progress); b.textContent = 'Reset my progress'; delete b.dataset.confirm; rebuild(); }
+  else { b.dataset.confirm = '1'; b.textContent = 'Tap again to confirm reset'; setTimeout(() => { b.textContent = 'Reset my progress'; delete b.dataset.confirm; }, 4000); }
+};
+$('optShuffle').onchange = e => { state.shuffle = e.target.checked; savePrefs(); rebuild(); };
+$('optHideKnown').onchange = e => { state.hideKnown = e.target.checked; savePrefs(); rebuild(); };
+
+document.addEventListener('keydown', e => {
+  if (state.mode !== 'cards' || e.target.closest('select,input')) return;
+  if (e.key === ' ') { e.preventDefault(); revealed = !revealed; render(); }
+  if (e.key === 'ArrowRight') go(pos + 1);
+  if (e.key === 'ArrowLeft') go(pos - 1);
+});
+
+/* ---------- Listen mode ---------- */
+const synth = window.speechSynthesis;
+let playing = false, runId = 0, listenShowAnswer = false, wakeLock = null, timers = [];
+let voices = [];
+
+function loadVoices() {
+  if (!synth) return;
+  voices = synth.getVoices().filter(v => /^en/i.test(v.lang));
+  const saved = store.get('ngcards.voice', '');
+  $('lVoice').innerHTML = voices.length
+    ? voices.map(v => `<option value="${esc(v.name)}"${v.name === saved ? ' selected' : ''}>${esc(v.name)} (${v.lang})</option>`).join('')
+    : '<option value="">Default voice</option>';
+}
+if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; } else { $('lUnsupported').hidden = false; $('lPlay').disabled = true; }
+$('lVoice').onchange = e => store.set('ngcards.voice', e.target.value);
+
+function setStatus(t, on) { $('lStatus').textContent = t; $('lDot').className = 'dot' + (on ? ' on' : ''); }
+function wait(ms, id) { return new Promise(res => { const t = setTimeout(() => res(id === runId), ms); timers.push(t); }); }
+
+// Speak sentence by sentence: avoids browsers cutting off long utterances.
+function speak(text, id) {
+  const parts = text.match(/[^.!?]+[.!?]*/g) || [text];
+  return parts.reduce((p, part) => p.then(ok => ok && new Promise(res => {
+    if (id !== runId) return res(false);
+    const u = new SpeechSynthesisUtterance(part.trim());
+    u.rate = parseFloat($('lRate').value);
+    const v = voices.find(x => x.name === $('lVoice').value); if (v) u.voice = v; else u.lang = 'en-GB';
+    u.onend = () => res(id === runId);
+    u.onerror = () => res(false);
+    synth.speak(u);
+  })), Promise.resolve(true));
+}
+
+async function playLoop() {
+  const id = ++runId;
+  while (playing && id === runId && deck[pos]) {
+    const c = deck[pos];
+    listenShowAnswer = false; render();
+    setStatus('Question', true);
+    if (!await speak(c.q, id)) return;
+    const think = parseInt($('lThink').value, 10);
+    setStatus(`Your turn: answer out loud (${think} s)`, true);
+    if (!await wait(think * 1000, id)) return;
+    listenShowAnswer = true; render();
+    setStatus('Answer', true);
+    if (!await speak('Answer. ' + c.a, id)) return;
+    if (!await wait(1800, id)) return;
+    if (pos >= deck.length - 1) { stopListening('Finished this set. Press Play to start again.'); pos = 0; return; }
+    pos++;
+  }
+}
+
+async function startListening() {
+  if (!synth || !deck.length) return;
+  playing = true; $('lPlay').textContent = '❚❚ Pause';
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+  playLoop();
+}
+function stopListening(msg) {
+  playing = false; runId++; timers.forEach(clearTimeout); timers = [];
+  if (synth) synth.cancel();
+  $('lPlay').textContent = '▶ Play';
+  setStatus(msg || 'Paused.', false);
+  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+function restartAt(n) {
+  const was = playing; stopListening(); pos = Math.max(0, Math.min(deck.length - 1, n)); listenShowAnswer = false; render();
+  if (was) startListening();
+}
+$('lPlay').onclick = () => playing ? stopListening() : startListening();
+$('lNext').onclick = () => restartAt(pos + 1);
+$('lPrev').onclick = () => restartAt(pos - 1);
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && playing && !wakeLock && 'wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+  }
+});
+
+function setMode(m) {
+  state.mode = m; savePrefs();
+  $('mCards').setAttribute('aria-pressed', m === 'cards');
+  $('mListen').setAttribute('aria-pressed', m === 'listen');
+  $('cardsMode').hidden = m !== 'cards';
+  $('listenMode').hidden = m !== 'listen';
+  if (m === 'cards') stopListening('Press Play to start.');
+  render();
+}
+$('mCards').onclick = () => setMode('cards');
+$('mListen').onclick = () => setMode('listen');
+
+$('optShuffle').checked = state.shuffle;
+$('optHideKnown').checked = state.hideKnown;
+rebuild();
+setMode(state.mode === 'listen' ? 'listen' : 'cards');
+</script>

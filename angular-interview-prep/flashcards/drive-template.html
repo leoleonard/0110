@@ -1,0 +1,144 @@
+<title>Drive Revision Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a car-friendly player. One huge play button and big prev/next, then the track list below. Dark-first so it is calm at night. */
+:root {
+  --bg: #0f1418; --surface: #182027; --fg: #e8edf2; --muted: #9aa6b4; --line: #2a3540;
+  --accent: #4fc2bf; --accent-ink: #0b1a1a; --accent-soft: #173a3a; --weak: #f0875f;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #eef1f4; --surface: #ffffff; --fg: #17202b; --muted: #5b6676; --line: #d6dce4;
+  --accent: #0e6e6e; --accent-ink: #ffffff; --accent-soft: #dcefee; --weak: #b4471f; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #eef1f4; --surface: #ffffff; --fg: #17202b; --muted: #5b6676; --line: #d6dce4;
+  --accent: #0e6e6e; --accent-ink: #ffffff; --accent-soft: #dcefee; --weak: #b4471f; color-scheme: light; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.5; }
+.app { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: grid; gap: 16px; }
+h1 { font-size: 1.3rem; margin: 0; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: .95rem; }
+.now { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+.now .label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
+.now h2 { margin: 0; font-size: 1.4rem; line-height: 1.25; text-wrap: balance; }
+.now .topics { color: var(--muted); font-size: .95rem; margin: 0; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; cursor: pointer; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.time { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.controls { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 10px; }
+.btn { font: inherit; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 16px; min-height: 76px; cursor: pointer; font-size: 1.05rem; }
+.btn.play { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-size: 1.4rem; min-height: 96px; }
+.small { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.small .btn { min-height: 56px; font-size: .95rem; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+li button { width: 100%; text-align: left; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+li button[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.num { font-family: var(--f-mono); color: var(--accent); font-weight: 500; }
+.t { min-width: 0; }
+.t b { display: block; }
+.t span { display: block; color: var(--muted); font-size: .85rem; }
+.dur { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.weak { color: var(--weak); font-weight: 700; }
+.note { color: var(--muted); font-size: .88rem; margin: 0; max-width: 60ch; }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Drive Revision Player</h1>
+    <p class="sub" id="total"></p>
+  </header>
+
+  <section class="now" aria-label="Now playing">
+    <span class="label" id="nLabel">Track 1</span>
+    <h2 id="nTitle"></h2>
+    <p class="topics" id="nTopics"></p>
+    <div class="bar" id="bar" role="slider" aria-label="Position" tabindex="0"><i id="fill"></i></div>
+    <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+    <div class="controls">
+      <button class="btn" id="prev" aria-label="Previous track">⏮ Prev</button>
+      <button class="btn play" id="play">▶ Play</button>
+      <button class="btn" id="next" aria-label="Next track">Next ⏭</button>
+    </div>
+    <div class="small">
+      <button class="btn" id="back">↺ Back 30 s</button>
+      <button class="btn" id="fwd">Skip 30 s ↻</button>
+    </div>
+  </section>
+
+  <ol id="list" aria-label="Tracks"></ol>
+
+  <p class="note">Each card: a question, about 6 seconds of quiet to answer out loud, a short chime, then the answer. Tracks play one after another. Start before you drive; steering-wheel and headphone buttons work for play, pause and skip. Your place is remembered on this device.</p>
+  <audio id="audio" preload="metadata"></audio>
+</div>
+
+<script>
+const TRACKS = /*__TRACKS__*/[];
+const $ = id => document.getElementById(id);
+const audio = $('audio');
+const fmt = s => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2,'0')}:${x}` : `${m}:${x}`; };
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+let idx = Math.min(store.get('drive.idx', 0), TRACKS.length - 1);
+let resumeAt = store.get('drive.pos', 0);
+const totalMin = TRACKS.reduce((a, t) => a + t.minutes, 0);
+$('total').textContent = `${TRACKS.length} tracks · ${TRACKS.reduce((a, t) => a + t.cards, 0)} cards · about ${Math.round(totalMin)} minutes`;
+
+function renderList() {
+  $('list').innerHTML = TRACKS.map((t, i) => `<li><button data-i="${i}" aria-current="${i === idx}">
+      <span class="num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="t"><b>${t.title}${t.weak ? ' <span class="weak">· weak areas</span>' : ''}</b><span>${t.topics.join(', ')}</span></span>
+      <span class="dur">${Math.round(t.minutes)} min</span></button></li>`).join('');
+  $('list').querySelectorAll('button').forEach(b => b.onclick = () => load(+b.dataset.i, true));
+}
+
+function load(i, autoplay, at = 0) {
+  idx = (i + TRACKS.length) % TRACKS.length;
+  const t = TRACKS[idx];
+  audio.src = t.src;
+  audio.currentTime = 0;
+  if (at) audio.addEventListener('loadedmetadata', () => { audio.currentTime = at; }, { once: true });
+  $('nLabel').textContent = `Track ${idx + 1} of ${TRACKS.length}`;
+  $('nTitle').textContent = t.title;
+  $('nTopics').textContent = t.topics.join(' · ');
+  store.set('drive.idx', idx);
+  renderList();
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: 'Angular interview revision', album: `Track ${idx + 1} of ${TRACKS.length}` });
+  }
+  if (autoplay) audio.play().catch(() => {});
+}
+
+function seek(delta) { audio.currentTime = Math.max(0, Math.min((audio.duration || 0), audio.currentTime + delta)); }
+$('play').onclick = () => audio.paused ? audio.play().catch(() => {}) : audio.pause();
+$('prev').onclick = () => (audio.currentTime > 5 ? (audio.currentTime = 0) : load(idx - 1, !audio.paused));
+$('next').onclick = () => load(idx + 1, !audio.paused);
+$('back').onclick = () => seek(-30);
+$('fwd').onclick = () => seek(30);
+$('bar').onclick = e => { const r = e.currentTarget.getBoundingClientRect(); if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration; };
+$('bar').onkeydown = e => { if (e.key === 'ArrowRight') seek(10); if (e.key === 'ArrowLeft') seek(-10); };
+
+audio.onplay = () => { $('play').textContent = '❚❚ Pause'; };
+audio.onpause = () => { $('play').textContent = '▶ Play'; };
+audio.ontimeupdate = () => {
+  $('cur').textContent = fmt(audio.currentTime);
+  $('dur').textContent = fmt(audio.duration);
+  $('fill').style.width = audio.duration ? (audio.currentTime / audio.duration * 100) + '%' : '0';
+  if (Math.floor(audio.currentTime) % 5 === 0) store.set('drive.pos', audio.currentTime);
+};
+audio.onended = () => { store.set('drive.pos', 0); if (idx < TRACKS.length - 1) load(idx + 1, true); else { $('play').textContent = '▶ Play'; } };
+
+if ('mediaSession' in navigator) {
+  const ms = navigator.mediaSession;
+  ms.setActionHandler('play', () => audio.play());
+  ms.setActionHandler('pause', () => audio.pause());
+  ms.setActionHandler('previoustrack', () => load(idx - 1, true));
+  ms.setActionHandler('nexttrack', () => load(idx + 1, true));
+  try { ms.setActionHandler('seekbackward', () => seek(-30)); ms.setActionHandler('seekforward', () => seek(30)); } catch {}
+}
+
+load(idx, false, resumeAt);
+</script>

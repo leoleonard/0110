@@ -1,0 +1,86 @@
+[
+  {
+    "file": "01-weak-areas-part-1.mp3",
+    "title": "Weak areas, part one",
+    "topics": [
+      "Change detection",
+      "Event loop",
+      "RxJS"
+    ],
+    "cards": 52,
+    "minutes": 24.2,
+    "mb": 10.2
+  },
+  {
+    "file": "02-weak-areas-part-2.mp3",
+    "title": "Weak areas, part two",
+    "topics": [
+      "Dependency injection",
+      "State management",
+      "REST & HTTP",
+      "Answer technique"
+    ],
+    "cards": 32,
+    "minutes": 14.5,
+    "mb": 6.1
+  },
+  {
+    "file": "03-angular-core.mp3",
+    "title": "Angular core",
+    "topics": [
+      "Versions",
+      "Signals",
+      "Components & templates",
+      "Routing & templates",
+      "Forms"
+    ],
+    "cards": 37,
+    "minutes": 17.2,
+    "mb": 7.2
+  },
+  {
+    "file": "04-angular-platform.mp3",
+    "title": "Angular platform, testing and security",
+    "topics": [
+      "HTTP, SSR & testing",
+      "Testing",
+      "Build & tooling",
+      "Security",
+      "Errors & monitoring"
+    ],
+    "cards": 34,
+    "minutes": 14.4,
+    "mb": 6.0
+  },
+  {
+    "file": "05-web-fundamentals.mp3",
+    "title": "JavaScript, TypeScript and the browser",
+    "topics": [
+      "JavaScript",
+      "TypeScript",
+      "CSS & rendering",
+      "HTML & styles",
+      "Accessibility",
+      "Web platform",
+      "i18n"
+    ],
+    "cards": 62,
+    "minutes": 27.1,
+    "mb": 11.4
+  },
+  {
+    "file": "06-engineering-and-product.mp3",
+    "title": "Engineering practice and product",
+    "topics": [
+      "Component library",
+      "Architecture",
+      "Patterns & quality",
+      "Git & CI",
+      "Agile",
+      "Product & stakeholders"
+    ],
+    "cards": 47,
+    "minutes": 19.4,
+    "mb": 8.1
+  }
+]

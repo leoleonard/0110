@@ -4,7 +4,7 @@
 >
 > **What senior-level interviewers are really probing:** whether you know *why* Angular works the way it does, not just the API. Can you explain how change detection is scheduled and what changed in recent versions (zoneless default in v21, OnPush default in v22)? Can you design a DI setup that keeps state correctly scoped? Can you pick signals or RxJS for the right reasons? Can you build reusable components (CVA, content projection, library entry points) that other teams can't misuse? They also check whether your knowledge is current, because many codebases still run v17–v20. Say which version a behaviour belongs to: "since v21…" or "before v22 the default was…". That shows you have done real migrations.
 
-**Version anchor (Sept 2026):** Angular 22.2 is current. Key changes: v20 made zoneless stable. v21 made zoneless the default for new apps, made Vitest the default test runner and added experimental Signal Forms. v22 made OnPush the default, added `ChangeDetectionStrategy.Eager`, made Signal Forms stable, switched HttpClient to `FetchBackend` by default, added `@Service()` and made incremental hydration the default.
+**Version anchor (Sept 2026):** Angular 22.2 is current. Key changes: v20 made zoneless developer preview, and 20.2 made it stable. v21 made zoneless the default for new apps, made Vitest the default test runner and added experimental Signal Forms. v22 made OnPush the default, added `ChangeDetectionStrategy.Eager`, made Signal Forms stable, switched HttpClient to `FetchBackend` by default, added `@Service()` and made incremental hydration the default.
 
 ---
 
@@ -198,7 +198,7 @@ export class UserSearchComponent {
 
 **Answer (1–2 min):**
 - **With zone.js:** zone.js monkey-patches every async API (`setTimeout`, promises, DOM events, XHR). When a task finishes, `NgZone.onMicrotaskEmpty` fires and Angular runs `ApplicationRef.tick()` from the root. It is "magic": you mutate anything anywhere and the UI updates. The costs are that CD runs far more often than needed, zone.js adds bundle weight and startup cost, async stack traces are noisy, and native `async/await` has to be downlevelled.
-- **Zoneless:** stable in v20, and the **default for new apps since v21** (zone.js not included; opt back in with `provideZoneChangeDetection()`). Angular schedules CD only when it is **notified**:
+- **Zoneless:** stable since v20.2, and the **default for new apps since v21** (zone.js not included; opt back in with `provideZoneChangeDetection()`). Angular schedules CD only when it is **notified**:
   - a signal read in a template changes (`set`/`update`);
   - `ChangeDetectorRef.markForCheck()` is called (the `AsyncPipe` does this for you);
   - a bound template or host event listener fires;

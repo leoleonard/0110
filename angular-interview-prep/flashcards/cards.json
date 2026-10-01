@@ -7,12 +7,12 @@
   {
     "topic": "Versions",
     "q": "What did Angular 21 change by default?",
-    "a": "New apps are zoneless by default, so zone.js is no longer included. Vitest replaced Karma as the default test runner. Signal Forms arrived as experimental."
+    "a": "Zoneless became the default: Angular no longer sets up zone-based change detection unless you add provideZoneChangeDetection, and ng update adds it for existing apps that still use zone.js. New projects don't include zone.js. Vitest replaced Karma as the default test runner, host bindings are type checked by default, and Signal Forms arrived as experimental."
   },
   {
     "topic": "Versions",
     "q": "What became stable in Angular 20?",
-    "a": "Zoneless change detection, effect, linkedSignal, toSignal, and incremental hydration. The structural directives ngIf, ngFor and ngSwitch were deprecated in favour of the built-in control flow blocks."
+    "a": "effect, linkedSignal, toSignal, toObservable, afterEveryRender, PendingTasks and incremental hydration became stable in version 20. Zoneless change detection went to developer preview in 20.0 and became stable in 20.2. The structural directives ngIf, ngFor and ngSwitch were deprecated in favour of the built-in control flow blocks."
   },
   {
     "topic": "Versions",
@@ -77,7 +77,7 @@
   {
     "topic": "Change detection",
     "q": "What is Eager change detection?",
-    "a": "The new name in version 22 for the old Default strategy, where a component is checked on every change detection cycle. It is the opt-out from the new OnPush default."
+    "a": "The new name in version 22 for the old Default strategy. An Eager component is checked every time change detection reaches it, which means whenever its parent is checked, even if nothing marked it dirty. It is the opt-out from the new OnPush default."
   },
   {
     "topic": "Signals",
@@ -167,7 +167,7 @@
   {
     "topic": "Routing & templates",
     "q": "What are functional guards and resolvers?",
-    "a": "Plain functions typed as CanActivateFn, CanMatchFn or ResolveFn that use inject inside. They return a boolean, a UrlTree or RedirectCommand to redirect, or an Observable or Promise of those."
+    "a": "Plain functions typed as CanActivateFn, CanMatchFn or ResolveFn that use inject inside. Guards return a boolean, a UrlTree, or a RedirectCommand to redirect. Resolvers return the data, or a RedirectCommand. Either can also return an Observable or Promise of those, and since version 22.2 you can also throw a RedirectCommand to redirect."
   },
   {
     "topic": "Routing & templates",
@@ -187,7 +187,7 @@
   {
     "topic": "Routing & templates",
     "q": "What are preloading strategies?",
-    "a": "PreloadAllModules downloads all lazy routes once the app is idle. A custom strategy can preload only flagged or likely routes. A defer block with prefetch on idle gives similar control at the template level."
+    "a": "PreloadAllModules downloads all lazy routes in the background right after the first navigation finishes. A custom strategy can preload only flagged or likely routes. A defer block with prefetch on idle gives similar control at the template level."
   },
   {
     "topic": "Forms",
@@ -287,12 +287,12 @@
   {
     "topic": "RxJS",
     "q": "Where should catchError go?",
-    "a": "Inside the inner observable, inside the switchMap. At the outer level, an error completes the whole stream, so a typeahead stops working after the first failed request."
+    "a": "Inside the inner observable, inside the switchMap. At the outer level, an error terminates the whole stream, and catchError can only swap it for a fallback that then completes, so a typeahead stops working after the first failed request."
   },
   {
     "topic": "RxJS",
     "q": "Compare forkJoin, combineLatest, zip and withLatestFrom.",
-    "a": "forkJoin emits once, when all sources complete, and never if one is infinite. combineLatest emits on every change once each source has emitted at least once. zip pairs values by index. withLatestFrom samples another stream only when the main stream emits."
+    "a": "forkJoin emits once, with the last value of each source, when all of them complete. It never emits if one source is infinite, and if any source completes without emitting, forkJoin just completes with nothing. combineLatest emits on every change once each source has emitted at least once. zip pairs values by index. withLatestFrom samples another stream only when the main stream emits."
   },
   {
     "topic": "RxJS",
@@ -412,7 +412,7 @@
   {
     "topic": "CSS & rendering",
     "q": "What creates a stacking context?",
-    "a": "position with a z-index, position fixed or sticky, opacity below one, transform, filter, will-change, contain paint, isolation isolate, and flex or grid children with a z-index."
+    "a": "The root element, and any element in the top layer. Position absolute or relative with a z-index other than auto. Position fixed or sticky, always. Flex or grid children with a z-index. Opacity below one, any transform, filter, clip-path or mask, mix-blend-mode, isolation isolate, contain paint or layout, container-type size or inline-size, and will-change naming one of those properties."
   },
   {
     "topic": "CSS & rendering",
@@ -422,7 +422,7 @@
   {
     "topic": "CSS & rendering",
     "q": "What are the steps of the rendering pipeline?",
-    "a": "HTML builds the DOM and CSS builds the CSSOM. Together they form the render tree. Layout computes geometry, paint fills in pixels, and composite assembles the layers on the GPU."
+    "a": "HTML builds the DOM and CSS builds the CSSOM. Style calculation works out the final styles for each element, and together they form the render tree. Layout computes geometry, paint fills in pixels, and composite assembles the layers on the GPU."
   },
   {
     "topic": "CSS & rendering",
@@ -492,7 +492,7 @@
   {
     "topic": "State management",
     "q": "How does selector memoization work, and how can you break it?",
-    "a": "createSelector recomputes only when its input selectors return new references. A projector that builds a new array on every call defeats memoization, and with it the benefit of OnPush."
+    "a": "createSelector remembers the last arguments and result, and recomputes only when an input selector returns a new reference. A projector building a new array is fine, because it only runs when the inputs change. What breaks memoization is an input selector that builds a new array or object on every call, for example by filtering or mapping, so the inputs always look new and everything downstream recomputes and re-renders. Do that work in the projector instead."
   },
   {
     "topic": "State management",
@@ -502,12 +502,12 @@
   {
     "topic": "State management",
     "q": "What are the common pitfalls of NgRx effects?",
-    "a": "Pick the flattening operator on purpose, and catch errors inside the inner pipe, otherwise the effect dies. By default NgRx resubscribes a failing effect up to ten times, which can hide the bug."
+    "a": "Pick the flattening operator on purpose, and catch errors inside the inner pipe, otherwise the error reaches the outer actions stream. By default NgRx resubscribes a failing effect up to ten times and then the effect stops for good. That silent resubscribe can hide the bug, and the action that caused the error is lost."
   },
   {
     "topic": "State management",
     "q": "What is NgRx SignalStore?",
-    "a": "NgRx's signal-based store, from the ngrx signals package. You compose it with withState, withComputed, withMethods, withHooks and withProps, update it with patchState, use rxMethod for RxJS side effects, and withEntities for collections. It is still NgRx."
+    "a": "NgRx's signal-based store, from the ngrx signals package. You compose it with withState, withComputed, withMethods, withHooks and withProps, and update it with patchState. rxMethod for RxJS side effects comes from the signals rxjs interop entry point, and withEntities for collections from the signals entities entry point. It is still NgRx."
   },
   {
     "topic": "State management",
@@ -532,7 +532,7 @@
   {
     "topic": "REST & HTTP",
     "q": "What is an idempotency key?",
-    "a": "The client generates a unique key for each user action and sends it in an Idempotency-Key header. The server stores it and returns the original result for repeats, so retries and double clicks don't create duplicates."
+    "a": "The client generates a unique key for each user action and sends it in an Idempotency-Key header. The server stores it and returns the original result for repeats, so retries and double clicks don't create duplicates. The header is still an IETF draft rather than a finished standard, but it's widely used, for example by Stripe."
   },
   {
     "topic": "REST & HTTP",
@@ -541,8 +541,8 @@
   },
   {
     "topic": "REST & HTTP",
-    "q": "How should the frontend handle 409, 412, 422, 429 and 503?",
-    "a": "409 is a conflict, often a version clash. 412 is a failed precondition, like an ETag mismatch. 422 means validation errors, which you map onto form fields. 429 means too many requests: back off and respect Retry-After. 502, 503 and 504 can be retried, but only for idempotent requests."
+    "q": "How should the frontend handle 409, 412, 422, 429 and the 502 to 504 errors?",
+    "a": "409 is a conflict, often a version clash: reload and let the user merge. 412 is a failed precondition, like an If-Match ETag mismatch. 422 means validation errors, which you map onto form fields. 429 means too many requests: back off and respect Retry-After. 502, 503 and 504 can be retried with exponential backoff and jitter, but only for idempotent requests, or for a POST that carries an idempotency key."
   },
   {
     "topic": "REST & HTTP",
@@ -732,7 +732,7 @@
   {
     "topic": "TypeScript",
     "q": "Enums or string literal unions?",
-    "a": "Prefer unions of string literals, or a const object with as const. They cost nothing at runtime and work well with narrowing. Enums emit runtime code and have quirks, especially numeric enums, which accept any number."
+    "a": "Prefer unions of string literals, or a const object with as const. They cost nothing at runtime and work well with narrowing. Enums emit runtime code and have quirks: numeric enums create reverse mappings and still accept any number held in a variable, and enums are not allowed under the erasable syntax only flag that Node's type stripping relies on."
   },
   {
     "topic": "TypeScript",
@@ -752,7 +752,7 @@
   {
     "topic": "TypeScript",
     "q": "What do strict mode and strictTemplates give you?",
-    "a": "strict enables strictNullChecks, noImplicitAny and related checks in TypeScript code. strictTemplates applies full type checking to Angular templates, including input types and nullability, so template bugs fail the build instead of production."
+    "a": "strict turns on strictNullChecks, noImplicitAny and related checks in TypeScript code, and since TypeScript 6 it is on by default. strictTemplates applies full type checking to Angular templates, including input types and nullability, so template bugs fail the build instead of production. In Angular 22 it is enabled by default, and ng update adds it to existing projects."
   },
   {
     "topic": "Components & templates",
@@ -827,7 +827,7 @@
   {
     "topic": "Security",
     "q": "How does Angular help with CSRF?",
-    "a": "HttpClient reads a token from the XSRF-TOKEN cookie and sends it in the X-XSRF-TOKEN header on mutating requests to relative URLs. The server must validate it. You can configure the names with withXsrfConfiguration. SameSite cookies add another layer."
+    "a": "HttpClient reads a token from the XSRF-TOKEN cookie and sends it in the X-XSRF-TOKEN header on mutating requests, meaning not GET or HEAD, to same-origin URLs, whether relative or absolute. It never sends it to other origins. The server must validate it. You can change the names with withXsrfConfiguration, or turn it off with withNoXsrfProtection. SameSite cookies add another layer."
   },
   {
     "topic": "Security",
@@ -1092,7 +1092,7 @@
   {
     "topic": "Accessibility",
     "q": "How do you make a modal dialog accessible?",
-    "a": "Use role dialog with aria-modal, or the native dialog element with showModal. Move focus into it when it opens, trap focus inside, close it with Escape, and return focus to the element that opened it."
+    "a": "Prefer the native dialog element opened with showModal. It gives you the top layer, makes the rest of the page inert, closes on Escape, and returns focus to the opener when it closes. With a custom role dialog and aria-modal, you must do all of that yourself: move focus in, trap it, close on Escape, and restore focus. Either way, give it an accessible name with aria-labelledby pointing at its heading."
   },
   {
     "topic": "Accessibility",
@@ -1157,17 +1157,17 @@
   {
     "topic": "HTML & styles",
     "q": "What is margin collapse?",
-    "a": "Vertical margins of adjacent block elements, or of a parent and its first or last child, combine into the larger one instead of adding up. It doesn't happen in flex or grid layouts, which is one reason to space items with gap."
+    "a": "Vertical margins of adjacent blocks combine into the larger one instead of adding up. A parent's margin also collapses with its first or last child's, unless padding, a border, or a new formatting context separates them. It doesn't happen in flex or grid layouts, which is one reason to space items with gap."
   },
   {
     "topic": "HTML & styles",
     "q": "What are container queries, and why do they matter for components?",
-    "a": "They style an element based on the size of its container instead of the viewport. A library component can adapt to wherever it's placed, like a narrow sidebar or a wide main area."
+    "a": "They style an element based on the size of its container instead of the viewport. You mark an ancestor with container-type inline-size, then write an at container rule. A library component can adapt to wherever it's placed, like a narrow sidebar or a wide main area."
   },
   {
     "topic": "HTML & styles",
     "q": "How do responsive images work?",
-    "a": "srcset lists image files at different widths and sizes tells the browser how wide the image will display, so it downloads the smallest suitable file. NgOptimizedImage generates srcset for you and warns about common mistakes."
+    "a": "srcset lists image files at different widths and sizes tells the browser how wide the image will display, so it downloads the smallest suitable file. NgOptimizedImage generates srcset for you when you configure an image loader, for example a CDN loader, and it also sets fetch priority for priority images and warns about common mistakes."
   },
   {
     "topic": "HTML & styles",
@@ -1207,7 +1207,7 @@
   {
     "topic": "RxJS",
     "q": "How do you retry failed HTTP calls properly?",
-    "a": "Use retry with a count and a delay function for exponential backoff with jitter. Retry only network errors and 502, 503, 504 or 429, and only for idempotent requests. Never retry 4xx validation errors."
+    "a": "Use retry with a config object: count, and a delay function that returns a timer, for exponential backoff with jitter. Retry only network errors, 429, and 502, 503 or 504, and only for idempotent requests. Never retry other 4xx errors such as validation failures."
   },
   {
     "topic": "RxJS",
@@ -1302,7 +1302,7 @@
   {
     "topic": "Change detection",
     "q": "What is your checklist for migrating an app to zoneless?",
-    "a": "Remove zone.js from the polyfills and use provideZonelessChangeDetection, the default since version 21. Make template state signals, or use the async pipe or markForCheck. Replace NgZone onStable and onMicrotaskEmpty logic. Move tests away from fakeAsync if they relied on zone.js. Then test areas that update from timers or third-party callbacks."
+    "a": "Remove zone.js from the polyfills and remove provideZoneChangeDetection. Since version 21 zoneless is the default, so you don't need anything else, though you can add provideZonelessChangeDetection to be explicit. Make template state signals, or use the async pipe or markForCheck. Replace NgZone onStable and onMicrotaskEmpty logic, for example with afterNextRender. Move tests away from fakeAsync if they relied on zone.js. Then test areas that update from timers or third-party callbacks."
   },
   {
     "topic": "Change detection",

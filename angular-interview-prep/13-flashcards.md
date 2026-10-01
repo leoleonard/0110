@@ -10,11 +10,11 @@ A: Angular 22, released in June 2026. Components without an explicit change dete
 
 **Q: What did Angular 21 change by default?**
 
-A: New apps are zoneless by default, so zone.js is no longer included. Vitest replaced Karma as the default test runner. Signal Forms arrived as experimental.
+A: Zoneless became the default: Angular no longer sets up zone-based change detection unless you add provideZoneChangeDetection, and ng update adds it for existing apps that still use zone.js. New projects don't include zone.js. Vitest replaced Karma as the default test runner, host bindings are type checked by default, and Signal Forms arrived as experimental.
 
 **Q: What became stable in Angular 20?**
 
-A: Zoneless change detection, effect, linkedSignal, toSignal, and incremental hydration. The structural directives ngIf, ngFor and ngSwitch were deprecated in favour of the built-in control flow blocks.
+A: effect, linkedSignal, toSignal, toObservable, afterEveryRender, PendingTasks and incremental hydration became stable in version 20. Zoneless change detection went to developer preview in 20.0 and became stable in 20.2. The structural directives ngIf, ngFor and ngSwitch were deprecated in favour of the built-in control flow blocks.
 
 **Q: In Angular 22, how do you get upload progress with HttpClient?**
 
@@ -68,7 +68,7 @@ A: The cost of change detection scales with what changed, not with the size of t
 
 **Q: What is Eager change detection?**
 
-A: The new name in version 22 for the old Default strategy, where a component is checked on every change detection cycle. It is the opt-out from the new OnPush default.
+A: The new name in version 22 for the old Default strategy. An Eager component is checked every time change detection reaches it, which means whenever its parent is checked, even if nothing marked it dirty. It is the opt-out from the new OnPush default.
 
 **Q: Explain how Angular change detection works, step by step.**
 
@@ -136,7 +136,7 @@ A: ngAfterViewInit runs after Angular has created the component's view, during c
 
 **Q: What is your checklist for migrating an app to zoneless?**
 
-A: Remove zone.js from the polyfills and use provideZonelessChangeDetection, the default since version 21. Make template state signals, or use the async pipe or markForCheck. Replace NgZone onStable and onMicrotaskEmpty logic. Move tests away from fakeAsync if they relied on zone.js. Then test areas that update from timers or third-party callbacks.
+A: Remove zone.js from the polyfills and remove provideZoneChangeDetection. Since version 21 zoneless is the default, so you don't need anything else, though you can add provideZonelessChangeDetection to be explicit. Make template state signals, or use the async pipe or markForCheck. Replace NgZone onStable and onMicrotaskEmpty logic, for example with afterNextRender. Move tests away from fakeAsync if they relied on zone.js. Then test areas that update from timers or third-party callbacks.
 
 **Q: markForCheck or detectChanges: which do you reach for first, and why?**
 
@@ -226,7 +226,7 @@ A: canMatch runs during route matching. If it returns false, the router tries ot
 
 **Q: What are functional guards and resolvers?**
 
-A: Plain functions typed as CanActivateFn, CanMatchFn or ResolveFn that use inject inside. They return a boolean, a UrlTree or RedirectCommand to redirect, or an Observable or Promise of those.
+A: Plain functions typed as CanActivateFn, CanMatchFn or ResolveFn that use inject inside. Guards return a boolean, a UrlTree, or a RedirectCommand to redirect. Resolvers return the data, or a RedirectCommand. Either can also return an Observable or Promise of those, and since version 22.2 you can also throw a RedirectCommand to redirect.
 
 **Q: Why is track mandatory in a for block?**
 
@@ -242,7 +242,7 @@ A: It binds route params, query params and resolved data directly to component i
 
 **Q: What are preloading strategies?**
 
-A: PreloadAllModules downloads all lazy routes once the app is idle. A custom strategy can preload only flagged or likely routes. A defer block with prefetch on idle gives similar control at the template level.
+A: PreloadAllModules downloads all lazy routes in the background right after the first navigation finishes. A custom strategy can preload only flagged or likely routes. A defer block with prefetch on idle gives similar control at the template level.
 
 ## Forms
 
@@ -328,11 +328,11 @@ A: The first request is aborted in the browser, but the server probably processe
 
 **Q: Where should catchError go?**
 
-A: Inside the inner observable, inside the switchMap. At the outer level, an error completes the whole stream, so a typeahead stops working after the first failed request.
+A: Inside the inner observable, inside the switchMap. At the outer level, an error terminates the whole stream, and catchError can only swap it for a fallback that then completes, so a typeahead stops working after the first failed request.
 
 **Q: Compare forkJoin, combineLatest, zip and withLatestFrom.**
 
-A: forkJoin emits once, when all sources complete, and never if one is infinite. combineLatest emits on every change once each source has emitted at least once. zip pairs values by index. withLatestFrom samples another stream only when the main stream emits.
+A: forkJoin emits once, with the last value of each source, when all of them complete. It never emits if one source is infinite, and if any source completes without emitting, forkJoin just completes with nothing. combineLatest emits on every change once each source has emitted at least once. zip pairs values by index. withLatestFrom samples another stream only when the main stream emits.
 
 **Q: What is the difference between hot and cold observables?**
 
@@ -352,7 +352,7 @@ A: Prefer not subscribing at all: use the async pipe or toSignal. Otherwise use 
 
 **Q: How do you retry failed HTTP calls properly?**
 
-A: Use retry with a count and a delay function for exponential backoff with jitter. Retry only network errors and 502, 503, 504 or 429, and only for idempotent requests. Never retry 4xx validation errors.
+A: Use retry with a config object: count, and a delay function that returns a timer, for exponential backoff with jitter. Retry only network errors, 429, and 502, 503 or 504, and only for idempotent requests. Never retry other 4xx errors such as validation failures.
 
 **Q: Why might distinctUntilChanged not stop duplicate emissions?**
 
@@ -458,7 +458,7 @@ A: z-index only competes within the same stacking context. If an ancestor create
 
 **Q: What creates a stacking context?**
 
-A: position with a z-index, position fixed or sticky, opacity below one, transform, filter, will-change, contain paint, isolation isolate, and flex or grid children with a z-index.
+A: The root element, and any element in the top layer. Position absolute or relative with a z-index other than auto. Position fixed or sticky, always. Flex or grid children with a z-index. Opacity below one, any transform, filter, clip-path or mask, mix-blend-mode, isolation isolate, contain paint or layout, container-type size or inline-size, and will-change naming one of those properties.
 
 **Q: How should a component library handle dropdown and modal layering?**
 
@@ -466,7 +466,7 @@ A: Render overlays outside the component tree, with the CDK Overlay or the brows
 
 **Q: What are the steps of the rendering pipeline?**
 
-A: HTML builds the DOM and CSS builds the CSSOM. Together they form the render tree. Layout computes geometry, paint fills in pixels, and composite assembles the layers on the GPU.
+A: HTML builds the DOM and CSS builds the CSSOM. Style calculation works out the final styles for each element, and together they form the render tree. Layout computes geometry, paint fills in pixels, and composite assembles the layers on the GPU.
 
 **Q: What is the difference between reflow and repaint?**
 
@@ -524,7 +524,7 @@ A: Name actions after what happened and where, like Product Page Opened, not com
 
 **Q: How does selector memoization work, and how can you break it?**
 
-A: createSelector recomputes only when its input selectors return new references. A projector that builds a new array on every call defeats memoization, and with it the benefit of OnPush.
+A: createSelector remembers the last arguments and result, and recomputes only when an input selector returns a new reference. A projector building a new array is fine, because it only runs when the inputs change. What breaks memoization is an input selector that builds a new array or object on every call, for example by filtering or mapping, so the inputs always look new and everything downstream recomputes and re-renders. Do that work in the projector instead.
 
 **Q: What does normalizing state mean?**
 
@@ -532,11 +532,11 @@ A: Store entities in a dictionary keyed by id plus an array of ids, as the entit
 
 **Q: What are the common pitfalls of NgRx effects?**
 
-A: Pick the flattening operator on purpose, and catch errors inside the inner pipe, otherwise the effect dies. By default NgRx resubscribes a failing effect up to ten times, which can hide the bug.
+A: Pick the flattening operator on purpose, and catch errors inside the inner pipe, otherwise the error reaches the outer actions stream. By default NgRx resubscribes a failing effect up to ten times and then the effect stops for good. That silent resubscribe can hide the bug, and the action that caused the error is lost.
 
 **Q: What is NgRx SignalStore?**
 
-A: NgRx's signal-based store, from the ngrx signals package. You compose it with withState, withComputed, withMethods, withHooks and withProps, update it with patchState, use rxMethod for RxJS side effects, and withEntities for collections. It is still NgRx.
+A: NgRx's signal-based store, from the ngrx signals package. You compose it with withState, withComputed, withMethods, withHooks and withProps, and update it with patchState. rxMethod for RxJS side effects comes from the signals rxjs interop entry point, and withEntities for collections from the signals entities entry point. It is still NgRx.
 
 **Q: When is the classic NgRx Store the right choice?**
 
@@ -558,15 +558,15 @@ A: Safe methods don't change state: GET, HEAD and OPTIONS. Idempotent means repe
 
 **Q: What is an idempotency key?**
 
-A: The client generates a unique key for each user action and sends it in an Idempotency-Key header. The server stores it and returns the original result for repeats, so retries and double clicks don't create duplicates.
+A: The client generates a unique key for each user action and sends it in an Idempotency-Key header. The server stores it and returns the original result for repeats, so retries and double clicks don't create duplicates. The header is still an IETF draft rather than a finished standard, but it's widely used, for example by Stripe.
 
 **Q: What is the difference between 401 and 403?**
 
 A: 401 means not authenticated: refresh the token or send the user to log in. 403 means authenticated but not allowed: show a permission message and don't retry.
 
-**Q: How should the frontend handle 409, 412, 422, 429 and 503?**
+**Q: How should the frontend handle 409, 412, 422, 429 and the 502 to 504 errors?**
 
-A: 409 is a conflict, often a version clash. 412 is a failed precondition, like an ETag mismatch. 422 means validation errors, which you map onto form fields. 429 means too many requests: back off and respect Retry-After. 502, 503 and 504 can be retried, but only for idempotent requests.
+A: 409 is a conflict, often a version clash: reload and let the user merge. 412 is a failed precondition, like an If-Match ETag mismatch. 422 means validation errors, which you map onto form fields. 429 means too many requests: back off and respect Retry-After. 502, 503 and 504 can be retried with exponential backoff and jitter, but only for idempotent requests, or for a POST that carries an idempotency key.
 
 **Q: What is CORS, and who fixes a CORS error?**
 
@@ -728,7 +728,7 @@ A: In the default branch, assign the value to a variable of type never. If someo
 
 **Q: Enums or string literal unions?**
 
-A: Prefer unions of string literals, or a const object with as const. They cost nothing at runtime and work well with narrowing. Enums emit runtime code and have quirks, especially numeric enums, which accept any number.
+A: Prefer unions of string literals, or a const object with as const. They cost nothing at runtime and work well with narrowing. Enums emit runtime code and have quirks: numeric enums create reverse mappings and still accept any number held in a variable, and enums are not allowed under the erasable syntax only flag that Node's type stripping relies on.
 
 **Q: What does the satisfies operator do?**
 
@@ -744,7 +744,7 @@ A: TypeScript compares types by shape, not by name, so two interfaces with the s
 
 **Q: What do strict mode and strictTemplates give you?**
 
-A: strict enables strictNullChecks, noImplicitAny and related checks in TypeScript code. strictTemplates applies full type checking to Angular templates, including input types and nullability, so template bugs fail the build instead of production.
+A: strict turns on strictNullChecks, noImplicitAny and related checks in TypeScript code, and since TypeScript 6 it is on by default. strictTemplates applies full type checking to Angular templates, including input types and nullability, so template bugs fail the build instead of production. In Angular 22 it is enabled by default, and ng update adds it to existing projects.
 
 ## Components & templates
 
@@ -808,7 +808,7 @@ A: Always potentially. It switches off sanitization for that value. Only use it 
 
 **Q: How does Angular help with CSRF?**
 
-A: HttpClient reads a token from the XSRF-TOKEN cookie and sends it in the X-XSRF-TOKEN header on mutating requests to relative URLs. The server must validate it. You can configure the names with withXsrfConfiguration. SameSite cookies add another layer.
+A: HttpClient reads a token from the XSRF-TOKEN cookie and sends it in the X-XSRF-TOKEN header on mutating requests, meaning not GET or HEAD, to same-origin URLs, whether relative or absolute. It never sends it to other origins. The server must validate it. You can change the names with withXsrfConfiguration, or turn it off with withNoXsrfProtection. SameSite cookies add another layer.
 
 **Q: What is a Content Security Policy, and how does it work with Angular?**
 
@@ -1036,7 +1036,7 @@ A: Every interactive element can be reached and used with the keyboard, focus is
 
 **Q: How do you make a modal dialog accessible?**
 
-A: Use role dialog with aria-modal, or the native dialog element with showModal. Move focus into it when it opens, trap focus inside, close it with Escape, and return focus to the element that opened it.
+A: Prefer the native dialog element opened with showModal. It gives you the top layer, makes the rest of the page inert, closes on Escape, and returns focus to the opener when it closes. With a custom role dialog and aria-modal, you must do all of that yourself: move focus in, trap it, close on Escape, and restore focus. Either way, give it an accessible name with aria-labelledby pointing at its heading.
 
 **Q: How do you test accessibility?**
 
@@ -1092,15 +1092,15 @@ A: The declared width and height include padding and border, so elements don't g
 
 **Q: What is margin collapse?**
 
-A: Vertical margins of adjacent block elements, or of a parent and its first or last child, combine into the larger one instead of adding up. It doesn't happen in flex or grid layouts, which is one reason to space items with gap.
+A: Vertical margins of adjacent blocks combine into the larger one instead of adding up. A parent's margin also collapses with its first or last child's, unless padding, a border, or a new formatting context separates them. It doesn't happen in flex or grid layouts, which is one reason to space items with gap.
 
 **Q: What are container queries, and why do they matter for components?**
 
-A: They style an element based on the size of its container instead of the viewport. A library component can adapt to wherever it's placed, like a narrow sidebar or a wide main area.
+A: They style an element based on the size of its container instead of the viewport. You mark an ancestor with container-type inline-size, then write an at container rule. A library component can adapt to wherever it's placed, like a narrow sidebar or a wide main area.
 
 **Q: How do responsive images work?**
 
-A: srcset lists image files at different widths and sizes tells the browser how wide the image will display, so it downloads the smallest suitable file. NgOptimizedImage generates srcset for you and warns about common mistakes.
+A: srcset lists image files at different widths and sizes tells the browser how wide the image will display, so it downloads the smallest suitable file. NgOptimizedImage generates srcset for you when you configure an image loader, for example a CDN loader, and it also sets fetch priority for priority images and warns about common mistakes.
 
 **Q: What are Sass maps and loops good for?**
 

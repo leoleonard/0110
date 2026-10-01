@@ -6,8 +6,8 @@
 | Thing | Current fact |
 |---|---|
 | Angular | **22.x** (22.0 released Jun 2026; 22.2 is the latest). v20 and v21 are LTS. Majors come out about every 6 months. |
-| v20 | Zoneless, `effect`, `linkedSignal` and `toSignal` went **stable**. Incremental hydration stable. `*ngIf`/`*ngFor` deprecated. |
-| v21 | **Zoneless is the default** for new apps. **Vitest is the default** test runner (Karma is legacy). Signal Forms experimental. |
+| v20 | `effect`, `linkedSignal` and `toSignal` went **stable**; zoneless went developer preview in 20.0 and **stable in 20.2**. Incremental hydration stable. `*ngIf`/`*ngFor` deprecated. |
+| v21 | **Zoneless is the default** (`ng update` adds `provideZoneChangeDetection()` to apps that keep zone.js). **Vitest is the default** test runner (Karma is legacy). Signal Forms experimental. |
 | v22 | **OnPush is the default** when `changeDetection` isn't set. `ChangeDetectionStrategy.Default` is deprecated; its new name is **`Eager`**. **Signal Forms stable** (`form()`, `[formField]`). **FetchBackend is the default** for HttpClient (`withFetch()` deprecated; use `withXhr()` if you need upload progress). New `@Service()` decorator. Incremental hydration is on by default. Router `paramsInheritanceStrategy` defaults to `'always'`. `ComponentFactoryResolver` removed. |
 | RxJS | 7.8.x. There is **no RxJS 8**. |
 | NgRx | 22.x. **SignalStore** (`@ngrx/signals`) is recommended for new code. Classic Store is still first-class. |
@@ -66,7 +66,7 @@ Sound bite: *"Our code base is on vX. I track the release notes, and the last tw
 ## 5. State management
 - **Redux principles:** a single source of truth, read-only state (change it by dispatching actions), pure reducers. Data flows one way: action → reducer → store → selector → view → action.
 - Actions are **events, not commands** (`[Product Page] Opened`, not `loadProducts`). Use `createActionGroup` and `createFeature`.
-- `createSelector` memoizes on input references. A projector that returns a new array every time defeats OnPush. **Normalize** data as `{ids, entities}` with `@ngrx/entity` and denormalize in selectors.
+- `createSelector` memoizes on input references, so the projector reruns only when an input changes. What defeats memoization (and OnPush) is an *input* selector that maps or filters, returning a new reference on every call. **Normalize** data as `{ids, entities}` with `@ngrx/entity` and denormalize in selectors.
 - In effects, choose the flattening operator on purpose and `catchError` inside the inner observable.
 - **SignalStore:** `signalStore(withState, withComputed, withMethods, withHooks, withProps)`, `patchState`, `rxMethod`, `withEntities`, and `signalStoreFeature` for reuse.
 - **When not to use NgRx:** state local to one feature, mostly server cache, a small team, no need for devtools or event auditing. Use a service with signals, or a server-state library, instead.

@@ -17,7 +17,7 @@ Material for a senior Angular frontend interview. Each file maps to one area of 
 | 11 | [Live coding](11-live-coding.md) | Hands-on round |
 | 12 | [Cheatsheet](12-cheatsheet.md) | Read one hour before |
 | 12 | [Questions to ask them](12-questions-to-ask-them.md) | End of interview |
-| 13 | [Flashcards](13-flashcards.md) | 141 cards; app with hands-free Listen mode in `flashcards/` |
+| 13 | [Flashcards](13-flashcards.md) | 244 cards across 30 topics; app with hands-free Listen mode in `flashcards/` |
 
 ## Suggested revision plan
 1. **Day −3:** skim sections A and D of files 01, 02 and 05, the areas most likely to be probed in depth. Mark every question you couldn't answer out loud in under 2 minutes.

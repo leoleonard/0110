@@ -1,6 +1,6 @@
 # 13 — Flashcards
 
-> 141 cards, the same deck as the [flashcard app](flashcards/index.html). Topics marked **(weak area)** came out weakest in the mock interview, so do those first. Cover the answer, say yours out loud, then check.
+> 244 cards, the same deck as the [flashcard app](flashcards/index.html). Topics marked **(weak area)** came out weakest in the mock interview, so do those first. Cover the answer, say yours out loud, then check.
 
 ## Versions
 
@@ -270,6 +270,18 @@ A: Subject has no current value and no replay. BehaviorSubject needs an initial 
 
 A: Prefer not subscribing at all: use the async pipe or toSignal. Otherwise use takeUntilDestroyed, which needs an injection context or a DestroyRef. Never nest subscribes; compose with operators instead.
 
+**Q: How do you retry failed HTTP calls properly?**
+
+A: Use retry with a count and a delay function for exponential backoff with jitter. Retry only network errors and 502, 503, 504 or 429, and only for idempotent requests. Never retry 4xx validation errors.
+
+**Q: Why might distinctUntilChanged not stop duplicate emissions?**
+
+A: By default it compares with triple equals, so new objects with the same content always count as different. Pass a comparator, or use distinctUntilKeyChanged for one property.
+
+**Q: Why does combineLatest sometimes never emit?**
+
+A: It waits until every source has emitted at least once. If one source hasn't emitted yet, nothing comes out. Add startWith to sources that may start empty.
+
 ## Event loop (weak area)
 
 **Q: What is the event loop rule?**
@@ -345,6 +357,18 @@ A: all rejects on the first rejection. allSettled waits for all and reports each
 **Q: What is the prototype chain?**
 
 A: Objects delegate property lookups to their prototype, then its prototype, and so on. Class syntax is sugar over constructor functions and prototypes.
+
+**Q: Map or a plain object, and what is WeakMap for?**
+
+A: Map keeps insertion order, accepts any key type and has a size property, so it's better for dynamic dictionaries. WeakMap holds its keys weakly, so entries disappear when the key object is garbage collected, which is ideal for caching data per object without memory leaks.
+
+**Q: What are generators and iterators?**
+
+A: An iterator is an object with a next method that returns value and done. A generator function, written with an asterisk, produces an iterator and pauses at each yield. They power for of loops, lazy sequences and spreading.
+
+**Q: What are the main memory leak sources in a frontend app?**
+
+A: Subscriptions and event listeners that are never removed, timers and intervals that keep running, detached DOM nodes still referenced from JavaScript, and caches that grow forever. Find them with heap snapshots in Chrome DevTools.
 
 ## CSS & rendering
 
@@ -599,3 +623,417 @@ A: Evidence first. Understand why people do what they do. Prove it small on a re
 **Q: What is the routine for live coding?**
 
 A: Clarify the requirements, write a simple working version, then trace one call out loud before saying you're done. Mention edge cases and how you'd test it.
+
+## TypeScript
+
+**Q: What is the difference between any, unknown and never?**
+
+A: any switches off type checking. unknown accepts any value but forces you to narrow it before use, so it's the safe choice for untrusted input like API responses. never is the type of a value that can't exist, used for exhaustive checks and functions that always throw.
+
+**Q: When do you use type, and when interface?**
+
+A: Both describe object shapes. Interfaces can be extended and merged by declaration, which suits public library APIs. Type aliases also handle unions, mapped and conditional types. Pick one convention for object shapes and use type where you need its extra power.
+
+**Q: Which built-in utility types do you use most?**
+
+A: Partial, Required and Readonly change optionality and mutability. Pick and Omit select properties. Record builds a dictionary type. ReturnType, Parameters, Awaited and NonNullable extract types from functions, promises and nullable values.
+
+**Q: How does type narrowing work?**
+
+A: TypeScript narrows a union inside a branch based on checks: typeof, instanceof, the in operator, equality checks, and discriminated unions with a shared literal field like kind. A custom type predicate, a function returning value is Foo, lets you write your own checks.
+
+**Q: How do you make a switch over a union exhaustive?**
+
+A: In the default branch, assign the value to a variable of type never. If someone adds a new member to the union and forgets a case, the compiler reports an error there.
+
+**Q: Enums or string literal unions?**
+
+A: Prefer unions of string literals, or a const object with as const. They cost nothing at runtime and work well with narrowing. Enums emit runtime code and have quirks, especially numeric enums, which accept any number.
+
+**Q: What does the satisfies operator do?**
+
+A: It checks that a value matches a type without widening the value's inferred type. You get validation against the type and still keep precise literal types, which is useful for configuration objects and route maps.
+
+**Q: What are generics with constraints?**
+
+A: Generics let a function or class work with many types while keeping them linked, like a table of T that emits a T on row click. A constraint, T extends something, says what T must have, for example an id property.
+
+**Q: What is structural typing, and what are branded types?**
+
+A: TypeScript compares types by shape, not by name, so two interfaces with the same fields are interchangeable. A branded type adds a fake marker property, so you can't accidentally pass a CustomerId where an OrderId is expected.
+
+**Q: What do strict mode and strictTemplates give you?**
+
+A: strict enables strictNullChecks, noImplicitAny and related checks in TypeScript code. strictTemplates applies full type checking to Angular templates, including input types and nullability, so template bugs fail the build instead of production.
+
+## Components & templates
+
+**Q: What is the order of the lifecycle hooks?**
+
+A: Constructor, then ngOnChanges if there are inputs, ngOnInit, ngDoCheck, ngAfterContentInit, ngAfterContentChecked, ngAfterViewInit, ngAfterViewChecked, and finally ngOnDestroy. For DOM work after rendering, use afterNextRender or afterEveryRender, which only run in the browser.
+
+**Q: What replaces ngOnChanges when you use signal inputs?**
+
+A: Derived values become computed signals, and reactions to input changes become effects or resources whose params read the input. ngOnChanges still works but is rarely needed.
+
+**Q: How does content projection work?**
+
+A: ng-content projects the parent's content into the component, and the select attribute creates named slots. Projected content is created by the parent, so it's instantiated even if the ng-content sits inside a false if block. For conditional or repeated projection, accept an ng-template and render it with ngTemplateOutlet.
+
+**Q: What is the difference between view queries and content queries?**
+
+A: viewChild and viewChildren find elements and components in the component's own template. contentChild and contentChildren find things projected into it by a parent. The signal-based versions return signals, so you read them in computed or effects instead of waiting for a lifecycle hook.
+
+**Q: What is the difference between attribute and structural directives?**
+
+A: Attribute directives change the look or behaviour of an existing element, like a tooltip or autofocus directive. Structural directives add or remove DOM by working with a template, though most of that is now done with the built-in control flow blocks.
+
+**Q: What are hostDirectives?**
+
+A: A way to compose directives onto a component or directive declaratively, and choose which inputs and outputs to expose. It's composition instead of inheritance, ideal for reusing behaviours like focus handling or tooltips in a component library.
+
+**Q: How should you bind to the host element?**
+
+A: Use the host property in the component or directive metadata for classes, attributes and event listeners. It's the recommended style over the HostBinding and HostListener decorators, and since version 21 host bindings are type checked by default.
+
+**Q: What is the difference between pure and impure pipes?**
+
+A: A pure pipe re-runs only when its input reference changes, so it works as cheap memoization. An impure pipe runs on every change detection cycle, which can be expensive. Prefer pure pipes or computed signals over calling methods in templates.
+
+**Q: How do you create components dynamically?**
+
+A: Call createComponent on a ViewContainerRef with the component class, then set inputs with setInput. Or use NgComponentOutlet in the template. Component factories and ComponentFactoryResolver were removed in version 22.
+
+**Q: What are the view encapsulation options?**
+
+A: Emulated, the default, scopes styles with generated attributes. ShadowDom uses the browser's native shadow DOM. None makes styles global. A component library usually keeps Emulated and exposes CSS custom properties for theming.
+
+**Q: What are the ways components can communicate?**
+
+A: Inputs and outputs for parent and child, model for two-way binding, a shared service or store with signals for siblings and distant components, and the router for state that belongs in the URL. Avoid reaching into children with viewChild to call their methods.
+
+**Q: What is the let block in templates for?**
+
+A: It declares a read-only local variable in the template, for example to read a signal or an async pipe once and reuse the result, instead of repeating the expression.
+
+## Security
+
+**Q: How does Angular protect against XSS?**
+
+A: It treats all values as untrusted and sanitizes them by context, HTML, style, URL and resource URL, when you bind them. Interpolation is always escaped, and binding to innerHTML is sanitized. Template code itself is trusted, so never build templates from user input.
+
+**Q: When is DomSanitizer bypassSecurityTrust dangerous?**
+
+A: Always potentially. It switches off sanitization for that value. Only use it for content you fully control, like a constant SVG, never for anything that came from a user or an API. Writing to nativeElement innerHTML directly also bypasses Angular's protection.
+
+**Q: How does Angular help with CSRF?**
+
+A: HttpClient reads a token from the XSRF-TOKEN cookie and sends it in the X-XSRF-TOKEN header on mutating requests to relative URLs. The server must validate it. You can configure the names with withXsrfConfiguration. SameSite cookies add another layer.
+
+**Q: What is a Content Security Policy, and how does it work with Angular?**
+
+A: A response header that restricts where scripts, styles and other resources can load from, which limits the damage of XSS. Avoid inline scripts. Angular supports a nonce for its inline styles through the CSP_NONCE token or the ngCspNonce attribute.
+
+**Q: Can you keep secrets in an Angular app?**
+
+A: No. Everything shipped to the browser, including environment files, is public. API keys that must stay secret belong on a backend or a backend-for-frontend.
+
+**Q: How do you manage dependency and supply-chain risk?**
+
+A: Commit the lockfile and use npm ci in CI, run npm audit or a scanner, keep dependencies updated with Renovate or Dependabot, and review new packages before adding them.
+
+**Q: What are Trusted Types?**
+
+A: A browser feature that blocks passing plain strings to dangerous DOM sinks like innerHTML, unless they come from an approved policy. Angular supports Trusted Types, which makes XSS much harder.
+
+## Component library
+
+**Q: How do you version a shared component library?**
+
+A: Semantic versioning: major for breaking changes, minor for new features, patch for fixes. Automate releases and changelogs with conventional commits or changesets, so consumers know exactly what each upgrade means.
+
+**Q: How do you handle breaking changes and deprecations?**
+
+A: Mark the old API as deprecated with a clear replacement, keep it for at least one major version, and ship an ng update migration schematic so consumers upgrade automatically. Announce it in the changelog and track remaining usage across apps.
+
+**Q: What are secondary entry points, and why use them?**
+
+A: Separate import paths in one package, like library slash button, built with ng-packagr. Consumers import only what they use, builds are faster, and boundaries between parts of the library are explicit.
+
+**Q: What makes a good component API?**
+
+A: A small, typed set of inputs with sensible defaults, composition through content projection and templates instead of dozens of flags, accessibility built in, and theming through CSS custom properties. Keep internals private behind the public API file.
+
+**Q: How do you theme a component library?**
+
+A: Define design tokens, such as color, spacing and typography, ideally generated from the design tool, and expose them as CSS custom properties. Components read the tokens, and apps override them per theme or brand without touching component code.
+
+**Q: How do you document and test a component library?**
+
+A: Storybook stories as living documentation, unit and interaction tests per component, component harnesses shipped for consumers' tests, visual regression tests for every story, and automated accessibility checks in CI.
+
+**Q: How do you build accessibility into a library?**
+
+A: Use native elements where possible, follow the ARIA authoring practices for widgets, and use the CDK a11y tools such as FocusTrap, LiveAnnouncer and the key managers for keyboard navigation. The Angular ARIA package provides headless accessible primitives. Test with axe, the keyboard and a screen reader.
+
+**Q: How do you detect accidental breaking changes in a library's public API?**
+
+A: Keep golden API report files, generated by a tool like API Extractor, and fail CI when the public surface changes without an intentional update. Add visual regression tests to catch breaking style changes.
+
+**Q: How should a library declare its Angular dependency?**
+
+A: As a peer dependency with a supported version range, so the app controls the single Angular version. Test against every major you claim to support.
+
+**Q: How do you measure whether a design system is succeeding?**
+
+A: Adoption across apps, the number of forked or duplicated components, time to build a new screen, accessibility issues found, design-to-development defects, and how long upgrades take.
+
+## Architecture
+
+**Q: How do you structure a large Angular codebase?**
+
+A: By feature or domain, not by file type. Each feature has its routes, components, state and API layer, plus a small public API. Shared UI and utilities live in separate libraries, and lint rules enforce which layers may import which.
+
+**Q: What does Nx add to an Angular monorepo?**
+
+A: Affected commands that build and test only what changed, local and remote caching, code generators, and module boundary rules based on project tags, so a feature can't import another feature's internals.
+
+**Q: When are micro-frontends worth it?**
+
+A: When independent teams need to deploy independently and the organisation is large enough to justify the cost. The costs are duplicated or mismatched dependencies, UX inconsistency and performance overhead. Start with a modular monolith with lazy-loaded features, and split only when team autonomy demands it.
+
+**Q: How do you implement micro-frontends in Angular?**
+
+A: Usually with Module Federation or Native Federation, which load remote apps or routes at runtime and share dependencies like Angular. A shared design system and clear contracts between shells and remotes are essential.
+
+**Q: What layers would you use inside a feature?**
+
+A: Presentation, meaning components. Application, meaning facades or stores that coordinate use cases. Domain, meaning models and pure business rules. Infrastructure, meaning API clients and adapters. Dependencies point inwards.
+
+**Q: Build-time environments or runtime configuration?**
+
+A: Environment files bake values into each build. Runtime configuration, loaded at startup with provideAppInitializer, lets one build artifact be promoted through every environment, which is safer and simpler for CI/CD.
+
+**Q: What are feature flags for?**
+
+A: They decouple deployment from release. You merge unfinished work safely, roll out gradually, run A/B tests, and turn a feature off instantly without a redeploy. Remove old flags so they don't become tech debt.
+
+**Q: What is an ADR?**
+
+A: An Architecture Decision Record: a short document stating the context, the decision, the alternatives considered and the consequences. It makes decisions visible, reviewable and understandable later.
+
+## Build & tooling
+
+**Q: What is the Angular application builder?**
+
+A: The default build system, based on esbuild with a Vite-powered dev server. It's much faster than the old webpack-based builder and supports SSR and prerendering in the same build.
+
+**Q: What are bundle budgets?**
+
+A: Size limits in angular.json that warn or fail the build when bundles or component styles grow beyond a threshold. They stop performance regressions in CI.
+
+**Q: What breaks tree shaking?**
+
+A: Modules with side effects on import, services registered in providers arrays instead of being tree-shakable with providedIn root, and broad barrel files that pull in more than you use.
+
+**Q: How do you analyse bundle size?**
+
+A: Build with stats output and inspect it with a bundle analyser or source-map-explorer, to find heavy dependencies and code that should be lazy-loaded.
+
+**Q: Should you ship source maps to production?**
+
+A: Generate hidden source maps and upload them to your error monitoring tool, so stack traces are readable, without serving the maps publicly.
+
+**Q: How do you upgrade Angular safely?**
+
+A: One major version at a time with ng update, which runs automatic migrations. Follow the official update guide, upgrade third-party libraries in step, and run the full test suite between steps.
+
+**Q: What are schematics?**
+
+A: Code generators and code transformers for the Angular CLI. ng generate uses them to create code, and ng add and ng update use them to install and migrate libraries. A component library can ship its own migrations.
+
+## Testing
+
+**Q: What should you test in a component?**
+
+A: Its behaviour through the DOM: given inputs, it renders the right output, and user interactions emit the right outputs or call the right services. Don't test private methods or implementation details.
+
+**Q: What are component harnesses?**
+
+A: Testing APIs from the CDK that interact with a component the way a user would, like getting a select's options or clicking a button. Tests survive refactors of the component's internal DOM, and libraries like Angular Material ship them.
+
+**Q: How do you test a service that makes HTTP calls?**
+
+A: Provide provideHttpClient and provideHttpClientTesting, inject HttpTestingController, call the service, use expectOne to assert the request and flush a response, and call verify at the end to catch unexpected requests.
+
+**Q: How do you set inputs in a test for a signal-based component?**
+
+A: Use fixture.componentRef.setInput with the input name and value, which works with signal inputs and OnPush. Then await fixture.whenStable or call detectChanges before asserting.
+
+**Q: What makes tests flaky, and how do you fix it?**
+
+A: Timing assumptions, shared state between tests, real network calls, animations and test order dependence. Use fake timers, isolate state, mock the network, and wait for conditions instead of fixed sleeps.
+
+**Q: How do you write good end-to-end tests?**
+
+A: Use Playwright or Cypress for a few critical user journeys. Select elements by role or a dedicated test id, not by CSS structure. Wait for conditions rather than timeouts, and control test data through APIs.
+
+**Q: How do you test dependencies you don't own?**
+
+A: Wrap the third-party API in your own adapter service and mock the adapter in tests. Mocking someone else's complex API directly makes tests brittle and tells you little.
+
+**Q: What is contract testing?**
+
+A: Verifying that frontend and backend agree on an API's shape, for example with Pact or by validating against the OpenAPI schema in CI. It catches integration breaks earlier than end-to-end tests.
+
+## Web platform
+
+**Q: Compare cookies, localStorage, sessionStorage and IndexedDB.**
+
+A: Cookies are small, sent with every request, and can be httpOnly. localStorage is synchronous, about 5 megabytes, and persists. sessionStorage is the same but per tab. IndexedDB is asynchronous, stores large structured data, and suits offline apps.
+
+**Q: When do you use a web worker?**
+
+A: For CPU-heavy work like parsing large files or complex calculations, to keep the main thread free for user interactions. Workers can't touch the DOM and communicate through postMessage. The Angular CLI can generate them.
+
+**Q: What does the Angular service worker do?**
+
+A: It caches the app shell and chosen API responses for offline use and faster repeat loads, and SwUpdate lets you detect and activate new versions. Getting the update flow right is the tricky part.
+
+**Q: What are Angular Elements?**
+
+A: Angular components packaged as standard custom elements with createCustomElement, so they can be used in non-Angular pages. Useful for gradual migrations or embedding widgets, at the cost of bundle size.
+
+**Q: What are IntersectionObserver and ResizeObserver used for?**
+
+A: IntersectionObserver reports when an element enters the viewport, for lazy loading, infinite scroll and analytics impressions. ResizeObserver reports element size changes, for responsive components. Both are far cheaper than scroll and resize listeners.
+
+**Q: Why use requestAnimationFrame instead of setTimeout for animation?**
+
+A: requestAnimationFrame runs right before the browser paints, in sync with the display refresh rate, and pauses in background tabs. setTimeout can fire mid-frame, causing jank and wasted work.
+
+## Errors & monitoring
+
+**Q: How do you handle errors globally in Angular?**
+
+A: Provide a custom ErrorHandler to log and report uncaught errors. provideBrowserGlobalErrorListeners forwards uncaught errors and unhandled promise rejections to it. Handle HTTP errors centrally in an interceptor.
+
+**Q: How should errors look to the user?**
+
+A: Inline messages for field validation, a toast for transient problems with a retry option, and an error page for fatal failures. Never swallow errors silently, and never show raw technical messages.
+
+**Q: What do you monitor in production?**
+
+A: JavaScript errors with readable stack traces via source maps, failed API calls, Core Web Vitals from real users, and release tags so you can tie problems to a deployment. Tools like Sentry or Datadog do this.
+
+**Q: What is a correlation id?**
+
+A: A unique id attached to a request, often in a header, and logged on both frontend and backend, so you can trace one user action across all systems when debugging.
+
+## i18n
+
+**Q: Angular built-in i18n or a runtime library like Transloco?**
+
+A: Built-in i18n translates at compile time: one build per locale, very fast, no runtime cost, but switching language reloads the app. Runtime libraries load translations on the fly with one build and instant switching, at some runtime cost.
+
+**Q: How do you format dates, numbers and plurals for different locales?**
+
+A: Use Angular's date, currency and number pipes with the right locale data, or the Intl APIs directly. Use ICU expressions for plurals and gender, because word order and plural rules differ between languages.
+
+**Q: How do you prepare CSS for right-to-left languages?**
+
+A: Use logical properties like margin-inline-start instead of margin-left, set the dir attribute, and test with a real RTL locale.
+
+## Accessibility
+
+**Q: What are the WCAG levels, and which do you target?**
+
+A: Levels A, AA and AAA. AA is the usual legal and business target. The principles are perceivable, operable, understandable and robust. WCAG 2.2 is the current version.
+
+**Q: What are the keyboard accessibility basics?**
+
+A: Every interactive element can be reached and used with the keyboard, focus is always visible, the tab order is logical, and nothing traps focus except a modal, which must close with Escape.
+
+**Q: How do you make a modal dialog accessible?**
+
+A: Use role dialog with aria-modal, or the native dialog element with showModal. Move focus into it when it opens, trap focus inside, close it with Escape, and return focus to the element that opened it.
+
+**Q: How do you test accessibility?**
+
+A: Automated checks with axe in unit or end-to-end tests catch only part of the problems. Add a keyboard-only pass, a screen reader check with NVDA or VoiceOver, and zoom to 200 and 400 percent to check reflow.
+
+**Q: How do you make form errors accessible?**
+
+A: Every field has a visible label. Link the error message to the field with aria-describedby, set aria-invalid, and don't rely on color alone. On submit, move focus to the first invalid field or an error summary.
+
+## Product & stakeholders
+
+**Q: How do you propose a measurable, customer-focused improvement?**
+
+A: Start from a user problem and a baseline metric, state a hypothesis, make the smallest change that tests it, measure with analytics or an A/B test, and report the result in business terms. For example: reduce checkout abandonment by improving INP on the payment step.
+
+**Q: Which metrics show frontend success?**
+
+A: Core Web Vitals from real users, JavaScript error rate, conversion or task completion rate, time on task, accessibility issues, bundle size, and delivery metrics like lead time and change failure rate.
+
+**Q: What makes an A/B test trustworthy?**
+
+A: One clear change, a primary metric decided up front, enough traffic for statistical significance, guardrail metrics like errors and performance, and running it long enough to cover weekly patterns. Feature flags make it easy.
+
+**Q: How do you work effectively with a third-party partner's API?**
+
+A: Agree the contract early, ideally in OpenAPI, including the error format and versioning. Build against mocks or their sandbox, clarify SLAs and rate limits, keep decisions in writing, and agree an escalation path before you need it.
+
+**Q: How do you explain tech debt to non-technical stakeholders?**
+
+A: In their terms: risk, time and money. For example, every feature in this area takes twice as long and we had three incidents last quarter. Propose a small, measurable investment with an expected payoff.
+
+**Q: How do you push back on scope or a deadline?**
+
+A: Don't just say no. Offer options with their costs: what we can ship by the date, what it would take to ship everything, and the risks of each. Let the product owner choose with the trade-offs visible.
+
+**Q: How do you work well with designers?**
+
+A: Get involved early to flag feasibility and edge cases, share design tokens between design and code, review designs for accessibility and states like loading, empty and error, and keep components in sync between the design tool and the library.
+
+**Q: How do you work well with QA?**
+
+A: Shift left: agree testable acceptance criteria before development, add stable test ids, share test environments and data, and write bug reports with clear steps, expected and actual results.
+
+## HTML & styles
+
+**Q: What is semantic HTML, and why does it matter?**
+
+A: Elements that describe their meaning: header, nav, main, aside, footer, article, a correct heading order, button for actions and links for navigation. Assistive technology, search engines and browsers rely on it.
+
+**Q: What does box-sizing border-box change?**
+
+A: The declared width and height include padding and border, so elements don't grow unexpectedly when you add padding. Most resets apply it to everything.
+
+**Q: What is margin collapse?**
+
+A: Vertical margins of adjacent block elements, or of a parent and its first or last child, combine into the larger one instead of adding up. It doesn't happen in flex or grid layouts, which is one reason to space items with gap.
+
+**Q: What are container queries, and why do they matter for components?**
+
+A: They style an element based on the size of its container instead of the viewport. A library component can adapt to wherever it's placed, like a narrow sidebar or a wide main area.
+
+**Q: How do responsive images work?**
+
+A: srcset lists image files at different widths and sizes tells the browser how wide the image will display, so it downloads the smallest suitable file. NgOptimizedImage generates srcset for you and warns about common mistakes.
+
+**Q: What are Sass maps and loops good for?**
+
+A: Maps store related values, like a spacing scale or theme colors, and each loops generate classes or custom properties from them, keeping a design system consistent.
+
+**Q: Mixins or extend in Sass?**
+
+A: Mixins copy declarations wherever they're included and can take arguments. extend merges selectors, which can produce unexpected selector bloat and doesn't work across media queries. Prefer mixins, or plain CSS custom properties.
+
+**Q: How does LESS compare with Sass?**
+
+A: Both add variables, nesting, mixins and functions. LESS uses the at sign for variables and treats classes as mixins. Sass has a more powerful module system, maps and control flow, and it's the standard choice in Angular projects.
+
+**Q: What is BEM, and is it still useful with Angular?**
+
+A: Block, element, modifier naming, like card, card double underscore title, card double dash active. Emulated encapsulation already scopes component styles, but BEM is still useful for global styles and for stable class names that a library exposes as theming hooks.

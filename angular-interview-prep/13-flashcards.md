@@ -1,6 +1,6 @@
 # 13 — Flashcards
 
-> 244 cards, the same deck as the [flashcard app](flashcards/index.html). Topics marked **(weak area)** came out weakest in the mock interview, so do those first. Cover the answer, say yours out loud, then check.
+> 264 cards, the same deck as the [flashcard app](flashcards/index.html). Topics marked **(weak area)** came out weakest in the mock interview, so do those first. Cover the answer, say yours out loud, then check.
 
 ## Versions
 
@@ -69,6 +69,86 @@ A: The cost of change detection scales with what changed, not with the size of t
 **Q: What is Eager change detection?**
 
 A: The new name in version 22 for the old Default strategy, where a component is checked on every change detection cycle. It is the opt-out from the new OnPush default.
+
+**Q: Explain how Angular change detection works, step by step.**
+
+A: Angular keeps a tree of component views. In a change detection cycle it walks the tree from the root down. For each view it evaluates the template bindings, compares each value with the previous one, and updates only the DOM that changed. Data flows one way, from parent to child, once per cycle.
+
+**Q: With zone.js, what triggers a change detection cycle?**
+
+A: zone.js patches async browser APIs such as events, timers, promises and XHR. When an async task finishes and the zone has no more pending microtasks, Angular calls ApplicationRef tick, which checks the tree from the root.
+
+**Q: Why does Angular check twice in development mode?**
+
+A: After the normal pass, dev mode runs a second pass that only verifies nothing changed. If a binding returns a different value on the second pass, it throws ExpressionChangedAfterItHasBeenChecked. This enforces one-way data flow and doesn't run in production.
+
+**Q: An Eager component sits inside an OnPush parent. When is the child checked?**
+
+A: Only when the OnPush parent is checked, because Angular skips the parent's whole subtree when the parent isn't dirty. So an OnPush parent also shields its Eager children. A child can still be refreshed through its own signals or markForCheck.
+
+**Q: How do signals make change detection more targeted?**
+
+A: When a signal read in a template changes, Angular marks that specific view for refresh and flags its ancestors as having a child to refresh. OnPush ancestors are traversed but not re-checked, so only the component that read the signal is updated.
+
+**Q: You call update on a signal holding an array, push an item, and return the same array. Why doesn't the view update?**
+
+A: Signals compare the old and new value with Object.is. Returning the same array reference counts as no change, so nothing is notified. Return a new array, for example by spreading the old one and adding the item.
+
+**Q: In a test you assign component.title equals something on an OnPush component and call detectChanges, but the DOM doesn't change. Why?**
+
+A: Assigning the property directly doesn't mark an OnPush component dirty, the way a real input change from a parent would. Use fixture.componentRef.setInput, which marks it for check and works with signal inputs.
+
+**Q: Does a click inside a deeply nested OnPush component cause its parents to be checked?**
+
+A: Yes. A template event listener marks its own view and all its ancestors dirty, so the path from the root to that component is checked in the next cycle. That's why events work with OnPush without extra code.
+
+**Q: How does the async pipe work with OnPush?**
+
+A: It subscribes to the observable, stores the latest value, and calls markForCheck every time a new value arrives. It also unsubscribes automatically when the view is destroyed.
+
+**Q: When would you use ChangeDetectorRef detach?**
+
+A: When a component receives very frequent data, like a live chart or a ticker, and you want to render on your own schedule. Detach it from the tree, then call detectChanges when you choose, for example once per animation frame. Reattach to return to normal behaviour.
+
+**Q: What is runOutsideAngular for?**
+
+A: In zone.js apps, it runs code outside the Angular zone, so high-frequency events like mousemove, scroll or animation timers don't trigger an app-wide check on every event. Re-enter with run when you need to update the UI. In zoneless apps it's rarely needed.
+
+**Q: Why are function calls in templates a performance problem?**
+
+A: A method call in a binding runs on every change detection pass of that component, even when nothing changed. Use computed signals or pure pipes instead, which are memoized and only recalculate when their inputs change.
+
+**Q: How do you find change detection performance problems?**
+
+A: Use the Angular DevTools profiler. It records each change detection cycle, which components were checked, and how long each took. Look for components checked far more often than their data changes, and for expensive bindings.
+
+**Q: What is hybrid change detection scheduling in zone.js apps?**
+
+A: Since Angular 18, apps that still use zone.js also schedule change detection when a signal changes or markForCheck is called, even if that happens outside the Angular zone. It makes zone-based and zoneless behaviour more consistent.
+
+**Q: How does Angular know an app is stable without zone.js, for example for SSR?**
+
+A: Through PendingTasks. HttpClient and other Angular APIs register pending work, and the app is considered stable when no tasks are pending. You can add your own tasks for async work that SSR or tests must wait for.
+
+**Q: What is the difference between ngAfterViewInit and afterNextRender?**
+
+A: ngAfterViewInit runs after Angular has created the component's view, during change detection, and also runs on the server. afterNextRender runs once after the browser has rendered, only in the browser, which makes it the right place for DOM measurement and third-party DOM libraries.
+
+**Q: What is your checklist for migrating an app to zoneless?**
+
+A: Remove zone.js from the polyfills and use provideZonelessChangeDetection, the default since version 21. Make template state signals, or use the async pipe or markForCheck. Replace NgZone onStable and onMicrotaskEmpty logic. Move tests away from fakeAsync if they relied on zone.js. Then test areas that update from timers or third-party callbacks.
+
+**Q: markForCheck or detectChanges: which do you reach for first, and why?**
+
+A: markForCheck. It cooperates with Angular's scheduler and batches work into the next cycle. detectChanges forces a synchronous check right now, which can cause extra work and ordering bugs. I use detectChanges only in tests, detached views, or when I truly need the DOM updated immediately.
+
+**Q: Give a one-minute explanation of OnPush, as you would in an interview.**
+
+A: OnPush tells Angular to skip a component and its subtree unless it's marked dirty: an input reference changes, an event fires in its template, an async pipe emits, a signal it reads changes, or markForCheck is called. The classic bug is mutating an input array, because the reference doesn't change. It makes change detection cost scale with what changed, enforces one-way immutable data flow, and since version 22 it's the default.
+
+**Q: What are the most common change detection mistakes?**
+
+A: Mutating objects or arrays instead of replacing them. Assigning plain fields from timers or callbacks in OnPush or zoneless code. Calling detectChanges everywhere to force updates. Expensive function calls in templates. And fixing ExpressionChangedAfterItHasBeenChecked with setTimeout instead of fixing the data flow.
 
 ## Signals
 
